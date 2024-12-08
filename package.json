@@ -1,0 +1,30 @@
+{
+  "name": "open-ad",
+  "version": "0.0.1",
+  "description": "Open active directory.",
+  "main": "main.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/krystofbruth/active-directory.git"
+  },
+  "author": "Kryštof Bruthans",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/krystofbruth/active-directory/issues"
+  },
+  "homepage": "https://github.com/krystofbruth/active-directory#readme",
+  "dependencies": {
+    "express": "^5.0.1",
+    "mongodb": "^6.11.0",
+    "pino": "^9.5.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.1",
+    "nodemon": "^3.1.7",
+    "typescript": "^5.7.2"
+  }
+}
