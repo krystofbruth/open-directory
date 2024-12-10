@@ -13,7 +13,24 @@ tags:
   - name: App management
     description: Endpoints for registering, deregistering and managing apps and their app permission scopes.
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
+    AuthorizationError:
+      required:
+        - meta
+        - code
+      type: object
+      properties:
+        meta:
+          $ref: "#/components/schemas/RequestMeta"
+        code:
+          type: string
+          enum:
+            - ERR_AUTHORIZATION
     RequestMeta:
       required:
         - timestamp
@@ -37,9 +54,14 @@ components:
           type: string
           format: sha256
           example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+security:
+  - BearerAuth: []
+servers:
+  - url: /api/v1/internal
 paths:
   /auth:
     post:
+      security: []
       tags:
         - Auth
       summary: Retrieves a new token pair from login credentials.
@@ -88,8 +110,9 @@ paths:
                   code:
                     type: string
                     enum:
-                      - ERR_AUTH
+                      - ERR_AUTHENTICATION
     put:
+      security: []
       tags:
         - Auth
       summary: Retrieves a new token pair from the current login session data.
@@ -131,7 +154,7 @@ paths:
                   code:
                     type: string
                     enum:
-                      - ERR_AUTH
+                      - ERR_AUTHENTICATION
         "403":
           description: Authorization failed, the refresh token was already used. Clearly communicate to the user that their account credentials might be compromised.
           content:
@@ -147,8 +170,9 @@ paths:
                   code:
                     type: string
                     enum:
-                      - ERR_AUTH
+                      - ERR_AUTHENTICATION
     delete:
+      security: []
       tags:
         - Auth
       summary: Invalidate the current refresh token.
@@ -195,4 +219,24 @@ paths:
                   code:
                     type: string
                     enum:
-                      - ERR_AUTH
+                      - ERR_AUTHENTICATION
+  /login:
+    get:
+      tags:
+        - Public routes
+      summary: User-friendly HTML page for sign-in into data-review app.
+      description: Returns a user-friendly HTML page with login input.
+      responses:
+        "200":
+          description: The request was successful, the HTML body contain an HTML page.
+  /me:
+    get:
+      tags:
+        - Public routes
+      summary: User-friendly HTML page for data review.
+      description: Returns a user-friendly HTML page with details about the user of which the token has been issued to.
+      responses:
+        "200":
+          description: Authorization success, the response body contains an HTML page.
+        "401":
+          description: The client's access token is either expired or non-existent. The HTML body contains a user-friendly HTML page with links back to login.
