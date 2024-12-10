@@ -38,11 +38,11 @@ components:
           format: sha256
           example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
 paths:
-  /login:
+  /auth:
     post:
       tags:
         - Auth
-      summary: Retrieves a new token pair for authorization.
+      summary: Retrieves a new token pair from login credentials.
       description: Accepts user credentials. If valid, returns the authorization token pair.
       requestBody:
         content:
@@ -89,24 +89,19 @@ paths:
                     type: string
                     enum:
                       - ERR_AUTH
-  /refresh:
-    post:
+    put:
       tags:
         - Auth
-      summary: Get a new token pair.
+      summary: Retrieves a new token pair from the current login session data.
       description: Retrieves a new token pair using the refresh token from the previous pair.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              required:
-                - refresh
-              type: object
-              properties:
-                refresh:
-                  type: string
-                  format: sha256
-                  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+      parameters:
+        - in: query
+          name: refresh
+          schema:
+            type: string
+            format: sha256
+            example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9825
+          description: Refresh token from the current token pair.
       responses:
         "200":
           description: Authorization success, the response body contains a new token pair.
@@ -153,24 +148,19 @@ paths:
                     type: string
                     enum:
                       - ERR_AUTH
-  /logout:
-    post:
+    delete:
       tags:
         - Auth
       summary: Invalidate the current refresh token.
-      description: Invalidates the current refresh token of the token pair, resulting in complete log-off in the following minutes.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              required:
-                - refresh
-              type: object
-              properties:
-                refresh:
-                  type: string
-                  format: sha256
-                  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+      description: Invalidates the current refresh token of the token pair, resulting in token pair invalidation once the access token expires.
+      parameters:
+        - in: query
+          name: refresh
+          schema:
+            type: string
+            format: sha256
+            example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9825
+          description: The refresh token to be invalidated.
       responses:
         "200":
           description: Token invalidation success. In a few minutes, the access token will become invalid as well, resulting in complete token pair invalidation.
