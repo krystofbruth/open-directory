@@ -1,8 +1,9 @@
+import createHttpError from "http-errors";
 import { Resource } from "../base/Resource.js";
 import Joi from "joi";
 const schema = Joi.object({
   name: Joi.string().alphanum().min(1).required(),
-  responseUris: Joi.array().items(Joi.string().uri()),
+  responseUris: Joi.array().items(Joi.string().uri()).required(),
 });
 
 export class App extends Resource {
@@ -20,7 +21,11 @@ export class App extends Resource {
       return;
     }
 
-    schema.validate(document);
+    const validation = schema.validate(document);
+    if (validation.error !== undefined) {
+      throw createHttpError(400, validation.error.message);
+    }
+
     this.name = document.name;
     this.responseUris = document.name;
   }

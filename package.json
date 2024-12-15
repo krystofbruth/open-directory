@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/main.js",
+    "test": "tsc && node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "dev:compile": "tsc --watch",
     "dev:run": "nodemon dist/main.js | pino-pretty"
   },

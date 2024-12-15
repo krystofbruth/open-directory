@@ -1,6 +1,7 @@
 import express from "express";
 import "./utils/db.js";
 import { logger } from "./utils/logger.js";
+import { App } from "./models/App.js";
 
 const port = process.env.PORT || 3000;
 const app = express();
