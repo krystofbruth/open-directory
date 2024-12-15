@@ -1,17 +1,17 @@
 openapi: 3.0.3
 info:
-  title: OpenAD - Internal API
-  description: Internal Open Active Directory API used for API management. THIS API SHOULDN'T BE USED FOR APPS, for that - use the external API.
+  title: OpenAD - Gateway API
+  description: Open Active Directory Gateway service API. Used for identity authentication, authorization, access and management purposes.
   version: 1.0.0
 tags:
-  - name: Auth
-    description: Authentication & authorization endpoints for both regular and administrator accounts.
-  - name: Public routes
-    description: Endpoints used for users to review their data and its usage across apps.
-  - name: User management
-    description: Endpoints for managing users inside a directory.
-  - name: App management
-    description: Endpoints for registering, deregistering and managing apps and their app permission scopes.
+  - name: Apps
+    description: Register, manage and deregister client apps.
+  - name: Authorization
+    description: Endpoints for getting, renewing & invalidating token pairs.
+  - name: Authentication
+    description: Internal API endpoints for authentication of users.
+  - name: Users
+    description: Endpoints for accessing and managing users and user data.
 components:
   securitySchemes:
     BearerAuth:
@@ -19,7 +19,7 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
-    AuthorizationError:
+    Error:
       required:
         - meta
         - code
@@ -29,8 +29,7 @@ components:
           $ref: "#/components/schemas/RequestMeta"
         code:
           type: string
-          enum:
-            - ERR_AUTHORIZATION
+          example: ERR_AUTHENTICATION
     RequestMeta:
       required:
         - timestamp
@@ -57,13 +56,134 @@ components:
 security:
   - BearerAuth: []
 servers:
-  - url: /api/v1/internal
+  - url: /api/v1
 paths:
-  /auth:
+  /authorization:
     post:
       security: []
       tags:
-        - Auth
+        - Authorization
+      summary: Authorization step for the OAuth 2.0. flow.
+      description: Based on the authorization token and client secret, retrieves a valid authorization token pair.
+      parameters:
+        - in: query
+          name: authorization
+          schema:
+            type: string
+            format: sha256
+            example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9825
+          description: The authorization token received from the sign-in step of OAuth 2.0. flow.
+        - in: query
+          name: secret
+          schema:
+            type: string
+            format: sha256
+            example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9825
+          description: The app's client secret token used for authentication of the app.
+      responses:
+        "201":
+          description: Flow step success, the body contains a new authorization token pair.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    required:
+                      - meta
+                    properties:
+                      meta:
+                        $ref: "#/components/schemas/RequestMeta"
+                  - $ref: "#/components/schemas/TokenPair"
+        "400":
+          description: Flow step failure, either the client secret or the authorization token were invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      security: []
+      tags:
+        - Authorization
+      summary: Retrieves a new token pair from the current session data.
+      description: Retrieves a new token pair using the refresh token from the previous pair.
+      parameters:
+        - in: query
+          name: refresh
+          schema:
+            type: string
+            format: sha256
+            example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9825
+          description: Refresh token from the current token pair.
+      responses:
+        "200":
+          description: Authorization success, the response body contains a new token pair.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    required:
+                      - meta
+                    properties:
+                      meta:
+                        $ref: "#/components/schemas/RequestMeta"
+                  - $ref: "#/components/schemas/TokenPair"
+        "400":
+          description: Authorization failed, the refresh token was invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Authorization failed, the refresh token was already used. Clearly communicate to the user that their account credentials might be compromised.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      security: []
+      tags:
+        - Authorization
+      summary: Invalidate the current refresh token.
+      description: Invalidates the current refresh token of the token pair, resulting in token pair invalidation once the access token expires.
+      parameters:
+        - in: query
+          name: refresh
+          schema:
+            type: string
+            format: sha256
+            example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9825
+          description: The refresh token to be invalidated.
+      responses:
+        "200":
+          description: Token invalidation success. In a few minutes, the access token will become invalid as well, resulting in complete token pair invalidation.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      meta:
+                        $ref: "#/components/schemas/RequestMeta"
+                  - type: object
+                    required:
+                      - code
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - SUCCESS
+        "400":
+          description: The refresh token was invalid, may be treated equally as the 200 response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /authenticate:
+    post:
+      security: []
+      tags:
+        - Authentication
       summary: Retrieves a new token pair from login credentials.
       description: Accepts user credentials. If valid, returns the authorization token pair.
       requestBody:
@@ -100,143 +220,4 @@ paths:
           content:
             application/json:
               schema:
-                required:
-                  - meta
-                  - code
-                type: object
-                properties:
-                  meta:
-                    $ref: "#/components/schemas/RequestMeta"
-                  code:
-                    type: string
-                    enum:
-                      - ERR_AUTHENTICATION
-    put:
-      security: []
-      tags:
-        - Auth
-      summary: Retrieves a new token pair from the current login session data.
-      description: Retrieves a new token pair using the refresh token from the previous pair.
-      parameters:
-        - in: query
-          name: refresh
-          schema:
-            type: string
-            format: sha256
-            example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9825
-          description: Refresh token from the current token pair.
-      responses:
-        "200":
-          description: Authorization success, the response body contains a new token pair.
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - type: object
-                    required:
-                      - meta
-                    properties:
-                      meta:
-                        $ref: "#/components/schemas/RequestMeta"
-                  - $ref: "#/components/schemas/TokenPair"
-        "400":
-          description: Authorization failed, the refresh token was invalid.
-          content:
-            application/json:
-              schema:
-                required:
-                  - meta
-                  - code
-                type: object
-                properties:
-                  meta:
-                    $ref: "#/components/schemas/RequestMeta"
-                  code:
-                    type: string
-                    enum:
-                      - ERR_AUTHENTICATION
-        "403":
-          description: Authorization failed, the refresh token was already used. Clearly communicate to the user that their account credentials might be compromised.
-          content:
-            application/json:
-              schema:
-                required:
-                  - meta
-                  - code
-                type: object
-                properties:
-                  meta:
-                    $ref: "#/components/schemas/RequestMeta"
-                  code:
-                    type: string
-                    enum:
-                      - ERR_AUTHENTICATION
-    delete:
-      security: []
-      tags:
-        - Auth
-      summary: Invalidate the current refresh token.
-      description: Invalidates the current refresh token of the token pair, resulting in token pair invalidation once the access token expires.
-      parameters:
-        - in: query
-          name: refresh
-          schema:
-            type: string
-            format: sha256
-            example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9825
-          description: The refresh token to be invalidated.
-      responses:
-        "200":
-          description: Token invalidation success. In a few minutes, the access token will become invalid as well, resulting in complete token pair invalidation.
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - type: object
-                    properties:
-                      meta:
-                        $ref: "#/components/schemas/RequestMeta"
-                  - type: object
-                    required:
-                      - code
-                    properties:
-                      code:
-                        type: string
-                        enum:
-                          - SUCCESS
-        "400":
-          description: The refresh token was invalid, may be treated equally as the 200 response.
-          content:
-            application/json:
-              schema:
-                required:
-                  - meta
-                  - code
-                type: object
-                properties:
-                  meta:
-                    $ref: "#/components/schemas/RequestMeta"
-                  code:
-                    type: string
-                    enum:
-                      - ERR_AUTHENTICATION
-  /login:
-    get:
-      tags:
-        - Public routes
-      summary: User-friendly HTML page for sign-in into data-review app.
-      description: Returns a user-friendly HTML page with login input.
-      responses:
-        "200":
-          description: The request was successful, the HTML body contain an HTML page.
-  /me:
-    get:
-      tags:
-        - Public routes
-      summary: User-friendly HTML page for data review.
-      description: Returns a user-friendly HTML page with details about the user of which the token has been issued to.
-      responses:
-        "200":
-          description: Authorization success, the response body contains an HTML page.
-        "401":
-          description: The client's access token is either expired or non-existent. The HTML body contains a user-friendly HTML page with links back to login.
+                $ref: "#/components/schemas/Error"
