@@ -1,5 +1,8 @@
+import { Collection, ObjectId } from "mongodb";
+
 export abstract class Resource {
-  public abstract id: string | null;
+  public abstract id: ObjectId | null;
+  protected abstract collection: Collection;
 
   /** Creates the document in case it isn't associated with any. Throws in case of an error. */
   public abstract create(): Promise<void>;

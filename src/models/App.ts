@@ -1,15 +1,18 @@
 import createHttpError from "http-errors";
 import { Resource } from "../base/Resource.js";
+import { db } from "../utils/db.js";
 import Joi from "joi";
+import { Document, MongoError, ObjectId } from "mongodb";
 const schema = Joi.object({
   name: Joi.string().alphanum().min(1).required(),
   responseUris: Joi.array().items(Joi.string().uri()).required(),
 });
 
 export class App extends Resource {
-  public id: string | null;
+  public id: ObjectId | null;
   public name: string | null;
   public responseUris: Array<string> | null;
+  protected collection = db.collection("apps");
 
   constructor(document: any | null) {
     super();
@@ -31,7 +34,14 @@ export class App extends Resource {
   }
 
   public override async fetch(id: string) {
-    // TBD fetch from DB
+    let document: Document;
+    try {
+      this.id = new ObjectId(id);
+      console.log(this.id);
+      document = this.collection.findOne({ _id: this.id });
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   public override async create() {
