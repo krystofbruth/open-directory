@@ -1,10 +1,14 @@
-import express from "express";
-import "./utils/db.js";
-import { logger } from "./utils/logger.js";
-import { App } from "./models/App.js";
+import { Container } from "./base/Container.js";
+import { MongoDbFactoryFactory } from "./databases/Mongo.js";
+import { MongoUserRepositoryFactory } from "./repositories/UserRepository.js";
 
-const port = process.env.PORT || 3000;
-const app = express();
+(async () => {
+  const container = new Container();
 
-app.listen(port);
-logger.info(`App listening on port ${port}`);
+  (
+    await container.register(
+      "mongod",
+      MongoDbFactoryFactory("mongodb://localhost:27017")
+    )
+  ).register("userRepository", MongoUserRepositoryFactory);
+})();

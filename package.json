@@ -1,13 +1,13 @@
 {
-  "name": "openad-gateway",
+  "name": "open-ad",
   "version": "0.0.1",
-  "description": "Open Active Directory gateway service.",
+  "description": "Open Active Directory service.",
   "main": "main.ts",
   "scripts": {
     "build": "tsc",
     "start": "node dist/main.js",
     "test": "tsc && node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "dev:compile": "tsc --watch",
+    "dev:tsc": "tsc --watch",
     "dev:run": "nodemon dist/main.js | pino-pretty"
   },
   "repository": {
@@ -23,13 +23,12 @@
   "dependencies": {
     "express": "^5.0.1",
     "http-errors": "^2.0.0",
-    "joi": "^17.13.3",
     "mongodb": "^6.11.0",
-    "pino": "^9.5.0"
+    "pino": "^9.5.0",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
-    "@types/joi": "^17.2.2",
     "@types/mongodb": "^4.0.6",
     "@types/node": "^22.10.1",
     "@types/pino": "^7.0.4",
