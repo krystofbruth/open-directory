@@ -9,3 +9,15 @@ export class DatabaseException extends FatalException {
     super(error, msg);
   }
 }
+
+export class Exception extends Error {
+  constructor(msg?: string) {
+    super(msg);
+  }
+}
+
+export class ConflictException extends Exception {
+  constructor(msg?: string) {
+    super(msg);
+  }
+}

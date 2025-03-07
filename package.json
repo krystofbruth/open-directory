@@ -9,7 +9,7 @@
     "test": "tsc && node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "dev:tsc": "tsc --watch",
     "dev:run": "nodemon dist/main.js | pino-pretty",
-    "dev": "tsc --watch & (nodemon dist/main.js | pino-pretty)"
+    "dev": "npm run dev:tsc & npm run dev:run"
   },
   "repository": {
     "type": "git",
