@@ -8,14 +8,15 @@
     "start": "node dist/main.js",
     "test": "tsc && node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "dev:tsc": "tsc --watch",
-    "dev:run": "nodemon dist/main.js | pino-pretty"
+    "dev:run": "nodemon dist/main.js | pino-pretty",
+    "dev": "tsc --watch & (nodemon dist/main.js | pino-pretty)"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/krystofbruth/active-directory.git"
   },
   "author": "Kryštof Bruthans",
-  "license": "ISC",
+  "license": "UNLICENSED",
   "bugs": {
     "url": "https://github.com/krystofbruth/active-directory/issues"
   },

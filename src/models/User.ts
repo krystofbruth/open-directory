@@ -1,6 +1,7 @@
 export interface User {
   username: string;
   passwordHash: string;
+  id: string;
 }
 
 export interface UserModifiable {
@@ -10,4 +11,5 @@ export interface UserModifiable {
 
 export interface UserFilter {
   username?: string;
+  id?: string;
 }

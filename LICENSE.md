@@ -1,0 +1,1 @@
+This project while under development falls under the legal framework imposed by Smíchov's Secondary Techncal School (contact via [ssps.cz](https://www.ssps.cz/)). All other rights belonging to the original author, Kryštof Bruthans, are reserved in their entirety by the author.

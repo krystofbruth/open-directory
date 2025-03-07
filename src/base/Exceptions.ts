@@ -1,13 +1,11 @@
 export class FatalException extends Error {
-  constructor(msg?: string) {
+  constructor(public readonly error: any, msg?: string) {
     super(msg);
   }
 }
 
-export class DependencyException extends FatalException {
-  constructor(dependecyKey: string) {
-    super(
-      `Failed to resolve dependency ${dependecyKey}, are all dependencies registered?`
-    );
+export class DatabaseException extends FatalException {
+  constructor(error: any, msg?: string) {
+    super(error, msg);
   }
 }

@@ -1,2 +1,6 @@
+import { PostgresDbFactory } from "./databases/postgres.js";
+
 // TODO
-(async () => {})();
+(async () => {
+  const db = await PostgresDbFactory();
+})();

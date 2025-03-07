@@ -13,7 +13,7 @@ Interacting with the database other than through the Open Active Directory serve
 Open Active Directory utilizes the following environment variables to connect to the PostgreSQL database. All of them must be set in order for a successful connection to be established.
 
 ```
-PG-USER
+PGUSER
 PGPASSWORD
 PGHOST
 PGPORT

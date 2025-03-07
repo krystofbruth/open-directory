@@ -1,2 +1,6 @@
 import pino from "pino";
-export const logger = pino.default();
+
+const logger = pino.default();
+// Additional logic to come
+
+export const Logger = logger;
