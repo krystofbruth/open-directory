@@ -1,19 +1,13 @@
-import { DependencyFactory } from "../base/Container.js";
+import { User, UserFilter, UserModifiable } from "../models/User.js";
 import { Repository } from "./Repository.js";
+import { DatabaseSync } from "node:sqlite";
 
-export interface UserRepository extends Repository {}
+export type UserRepository = Repository<User, UserModifiable, UserFilter>;
 
-export const MongoUserRepositoryFactory: DependencyFactory<
-  UserRepository
-> = async (container) => {
-  const db = container.inject("mongod");
+export class PostgresUserRepository implements UserRepository {
+  constructor(private postgres: DatabaseSync) {}
 
-  const res = await db.command({ ping: 1 });
-  console.log(res);
-
-  return {
-    save() {
-      // TODO
-    },
-  };
-};
+  public find(filter?: UserFilter | undefined): User[] {
+    // TODO
+  }
+}

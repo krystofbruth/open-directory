@@ -21,9 +21,11 @@
   },
   "homepage": "https://github.com/krystofbruth/active-directory#readme",
   "dependencies": {
+    "@types/pg": "^8.11.11",
     "express": "^5.0.1",
     "http-errors": "^2.0.0",
     "mongodb": "^6.11.0",
+    "pg": "^8.13.3",
     "pino": "^9.5.0",
     "zod": "^3.24.2"
   },
