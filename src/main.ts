@@ -6,10 +6,6 @@ import { PostgresUserRepositoryFactory } from "./repositories/UserRepository.js"
   const pgClient = await PostgresDbFactory();
 
   const userRepository = await PostgresUserRepositoryFactory(pgClient);
-  console.log(
-    await userRepository.create({
-      username: "somebody",
-      passwordHash: "some-plaintext-pass'",
-    })
-  );
+  const res = await userRepository.get(1, 1);
+  console.log(res);
 })();

@@ -8,6 +8,7 @@ export interface UserRepository {
   findById(id: string): Promise<User | null>;
   findByUsername(username: string): Promise<User | null>;
   create(userModifiable: UserModifiable): Promise<User>;
+  get(limit: number, offset: number): Promise<User[]>;
 }
 
 class PostgresUserRepository implements UserRepository {
@@ -51,6 +52,17 @@ class PostgresUserRepository implements UserRepository {
         return null;
       }
       return res.rows[0];
+    } catch (err) {
+      throw new DatabaseException(err);
+    }
+  }
+
+  public async get(limit: number, offset: number): Promise<User[]> {
+    const query = "SELECT * FROM users LIMIT $1 OFFSET $2";
+    const params = [limit, offset];
+    try {
+      const res = await this.pgClient.query(query, params);
+      return res.rows;
     } catch (err) {
       throw new DatabaseException(err);
     }
