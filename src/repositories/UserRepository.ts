@@ -1,5 +1,4 @@
 import pg from "pg";
-const { DatabaseError } = pg;
 import { User, UserModifiable } from "../models/User.js";
 import { ConflictException, DatabaseException } from "../base/Exceptions.js";
 import { Logger } from "../logger.js";
@@ -9,6 +8,7 @@ export interface UserRepository {
   findByUsername(username: string): Promise<User | null>;
   create(userModifiable: UserModifiable): Promise<User>;
   get(limit: number, offset: number): Promise<User[]>;
+  checkConflict(username: string): Promise<boolean>;
 }
 
 class PostgresUserRepository implements UserRepository {
@@ -22,9 +22,6 @@ class PostgresUserRepository implements UserRepository {
       const res = await this.pgClient.query(query, params);
       return res.rows[0];
     } catch (err) {
-      if (err instanceof DatabaseError && err.code === "23505") {
-        throw new ConflictException();
-      }
       throw new DatabaseException(err);
     }
   }
@@ -63,6 +60,18 @@ class PostgresUserRepository implements UserRepository {
     try {
       const res = await this.pgClient.query(query, params);
       return res.rows;
+    } catch (err) {
+      throw new DatabaseException(err);
+    }
+  }
+
+  public async checkConflict(username: string): Promise<boolean> {
+    const query = "SELECT * FROM users WHERE username=$1";
+    const params = [username];
+    try {
+      const res = await this.pgClient.query(query, params);
+      if (res.rowCount !== 0) return true;
+      return false;
     } catch (err) {
       throw new DatabaseException(err);
     }
