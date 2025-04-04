@@ -53,6 +53,23 @@ components:
           type: string
           format: sha256
           example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+    UserView:
+      type: object
+      required:
+        - userid
+        - username
+      properties:
+        userid:
+          type: string
+        username:
+          type: string
+  responses:
+    InternalServerError:
+      description: Internal server error occured. Contact the maintainers or fill out a bug report.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
 security:
   - BearerAuth: []
 servers:
@@ -221,3 +238,43 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /user:
+    post:
+      summary: Creates a new user.
+      description: Based on the provided body, creates a new user.
+      tags:
+        - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "201":
+          description: User creation success.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserView"
+        "400":
+          description: Not all required parameters were satisfied.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: A user with the provided username already exists.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
