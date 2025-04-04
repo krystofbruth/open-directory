@@ -12,7 +12,7 @@ export function HttpRouterFactory(port: number, logger: Logger) {
   router.use(
     (err: unknown, req: Request, res: Response, next: NextFunction) => {
       if (isHttpError(err) && err.expose) {
-        res.status(err.status).json(err);
+        res.status(err.status).json(err.cause);
       } else {
         logger.error(err);
         res.status(500);
