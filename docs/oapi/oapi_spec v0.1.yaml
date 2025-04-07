@@ -1,0 +1,176 @@
+openapi: 3.0.4
+info:
+  title: OpenDirectory API
+  version: 0.1.0
+tags:
+  - name: Users
+    description: User entity management.
+  - name: Sessions
+    description: Session management.
+components:
+  schemas:
+    UserView:
+      type: object
+      required:
+        - userid
+        - username
+      properties:
+        userid:
+          type: string
+          format: uuid
+        username:
+          type: string
+  responses:
+    Unauthorized:
+      description: The authorization token was missing from the request.
+    InternalServerError:
+      description: Internal server error occured, please contact the maintainers.
+  securitySchemes:
+    SessionAuth:
+      type: http
+      scheme: bearer
+security:
+  - SessionAuth: []
+
+paths:
+  /user:
+    get:
+      summary: Fetches all Users.
+      tags:
+        - Users
+      responses:
+        "200":
+          description: Lookup success.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserView"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      summary: Creates a new User.
+      tags:
+        - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "201":
+          description: User creation success.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserView"
+        "400":
+          description: Not all parameters were specified.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: User with this username already exists.
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /user/{userid}:
+    parameters:
+      - in: path
+        name: userid
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      summary: Update a User.
+      tags:
+        - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: User update success.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserView"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: User not found.
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      summary: Delete a User.
+      tags:
+        - Users
+      responses:
+        "204":
+          description: User deletion success.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: User not found.
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /session:
+    post:
+      summary: Create a Session (login).
+      security: []
+      tags:
+        - Sessions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Authentication success.
+          content:
+            application/json:
+              schema:
+                type: string
+                format: sha512-hex
+                example: ee26b0dd4af7e749aa1a8ee3c10ae9923f618980772e473f8819a5d4940e0db27ac185f8a0e1d5f84f88bc887fd67b143732c304cc5fa9ad8e6f57f50028a8ff
+        "400":
+          description: Authentication failure, either username or password were invalid.
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      summary: Delete a session (logout).
+      tags:
+        - Sessions
+      responses:
+        "204":
+          description: Session deletion success.
+        "404":
+          description: Session not found.
+        "500":
+          $ref: "#/components/responses/InternalServerError"
