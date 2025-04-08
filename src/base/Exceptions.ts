@@ -21,3 +21,9 @@ export class ConflictException extends Exception {
     super(msg);
   }
 }
+
+export class NotFoundException extends Exception {
+  constructor(msg?: string) {
+    super(msg);
+  }
+}

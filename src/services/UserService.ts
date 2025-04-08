@@ -1,4 +1,4 @@
-import { ConflictException } from "../base/Exceptions.js";
+import { ConflictException, NotFoundException } from "../base/Exceptions.js";
 import { PasswordHashSuite } from "../crypto/PasswordHashSuite.js";
 import { User } from "../models/User.js";
 import { UserRepository } from "../repositories/UserRepository.js";
@@ -9,9 +9,17 @@ export class UserService {
     private passwordHashSuite: PasswordHashSuite
   ) {}
 
-  public async retrieveUserById(id: string) {
-    // Business logic like permissions
-    return await this.userRepository.findById(id);
+  public async retrieveUserById(id: string): Promise<User> {
+    const user = await this.userRepository.findById(id);
+    if (user === null) throw new NotFoundException();
+    return user;
+  }
+
+  public async retrieveUsers(
+    limit: number = 50,
+    offset: number = 0
+  ): Promise<User[]> {
+    return await this.userRepository.get(limit, offset);
   }
 
   public async createUser(username: string, password: string): Promise<User> {
