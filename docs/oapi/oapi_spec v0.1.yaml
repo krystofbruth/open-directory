@@ -36,6 +36,19 @@ paths:
   /user:
     get:
       summary: Fetches all Users.
+      parameters:
+        - in: query
+          name: limit
+          required: false
+          description: Limits the number of Users in the response. Max limit 100.
+          schema:
+            type: number
+        - in: query
+          name: offset
+          required: false
+          description: Offsets the lookup of Users when rendering multiple pages.
+          schema:
+            type: number
       tags:
         - Users
       responses:
@@ -44,9 +57,18 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/UserView"
+                type: object
+                required:
+                  - users
+                  - count
+                properties:
+                  count:
+                    type: number
+                    description: Number of Users in the directory.
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/UserView"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "500":
