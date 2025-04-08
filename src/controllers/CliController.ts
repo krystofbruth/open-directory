@@ -17,7 +17,7 @@ export class CliController {
     const user = await this.userService.createUser(username, password);
 
     console.log(
-      `--- User creation success ---\nUID: ${user.id}\nUsername: ${username}`
+      `--- User creation success ---\nUID: ${user.userid}\nUsername: ${username}`
     );
   }
 }
