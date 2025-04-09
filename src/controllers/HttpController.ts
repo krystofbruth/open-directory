@@ -112,4 +112,15 @@ export class HttpController {
       throw mapExceptionToHttpError(err);
     }
   }
+
+  public async deleteUser(req: Request, res: Response) {
+    const userid = req.params.userid;
+
+    try {
+      await this.userService.deleteUser(userid);
+      res.status(204).send();
+    } catch (err) {
+      throw mapExceptionToHttpError(err);
+    }
+  }
 }

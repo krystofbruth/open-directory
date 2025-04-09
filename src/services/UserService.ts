@@ -56,4 +56,9 @@ export class UserService {
 
     return await this.userRepository.update(userid, username, passwordHash);
   }
+
+  public async deleteUser(userid: string): Promise<void> {
+    await this.userRepository.delete(userid);
+    return;
+  }
 }

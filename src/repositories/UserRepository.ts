@@ -21,6 +21,7 @@ export interface UserRepository {
     username: string | undefined,
     passwordHash: string | undefined
   ): Promise<User>;
+  delete(userid: string): Promise<void>;
 }
 
 class PostgresUserRepository implements UserRepository {
@@ -91,6 +92,14 @@ class PostgresUserRepository implements UserRepository {
     ];
 
     return (await this.db.performQuery(query, params))[0];
+  }
+
+  public async delete(userid: string): Promise<void> {
+    if (!validateUUID(userid)) throw new InvalidParamsException();
+    const query = "DELETE FROM users WHERE userid = $1";
+    const params = [userid];
+    await this.db.performQuery(query, params);
+    return;
   }
 }
 

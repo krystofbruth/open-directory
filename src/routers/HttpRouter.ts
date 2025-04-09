@@ -50,6 +50,18 @@ export function HttpRouterFactory(
     }
   );
 
+  router.delete(
+    "/user/:userid",
+    jsonMiddleware(),
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        await httpController.deleteUser(req, res);
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
+
   router.use((req, res, next) => {
     throw createHttpError(404);
   });
