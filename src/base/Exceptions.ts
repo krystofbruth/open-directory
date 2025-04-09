@@ -27,3 +27,9 @@ export class NotFoundException extends Exception {
     super(msg);
   }
 }
+
+export class InvalidParamsException extends Exception {
+  constructor(msg?: string) {
+    super(msg);
+  }
+}

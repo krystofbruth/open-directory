@@ -1,8 +1,14 @@
 import pg from "pg";
 import { User, UserModifiable } from "../models/User.js";
-import { ConflictException, DatabaseException } from "../base/Exceptions.js";
+import {
+  ConflictException,
+  DatabaseException,
+  InvalidParamsException,
+  NotFoundException,
+} from "../base/Exceptions.js";
 import { Logger } from "../logger.js";
 import { PostgresDb } from "../databases/postgres.js";
+import { validate as validateUUID } from "uuid";
 
 export interface UserRepository {
   findById(id: string): Promise<User | null>;
@@ -10,6 +16,11 @@ export interface UserRepository {
   create(userModifiable: UserModifiable): Promise<User>;
   get(limit: number, offset: number): Promise<User[]>;
   checkConflict(username: string): Promise<boolean>;
+  update(
+    userid: string,
+    username: string | undefined,
+    passwordHash: string | undefined
+  ): Promise<User>;
 }
 
 class PostgresUserRepository implements UserRepository {
@@ -19,7 +30,7 @@ class PostgresUserRepository implements UserRepository {
     return {
       userid: inp.userid,
       username: inp.username,
-      passwordHash: inp.passwordHash,
+      passwordHash: inp.passwordhash,
     };
   }
 
@@ -31,15 +42,20 @@ class PostgresUserRepository implements UserRepository {
   }
 
   public async findById(id: string): Promise<User | null> {
+    if (!validateUUID(id)) throw new InvalidParamsException();
     const query = "SELECT * FROM users WHERE userid=$1;";
     const params = [id];
-    return (await this.db.performQuery(query, params))[0] || null;
+    const res = (await this.db.performQuery(query, params))[0];
+    if (!res) return null;
+    return this.mapPostgresUserToUser(res);
   }
 
   public async findByUsername(username: string): Promise<User | null> {
     const query = "SELECT * FROM users WHERE username=$1;";
     const params = [username];
-    return (await this.db.performQuery(query, params))[0] || null;
+    const res = (await this.db.performQuery(query, params))[0];
+    if (!res) return null;
+    return this.mapPostgresUserToUser(res);
   }
 
   public async get(limit: number, offset: number): Promise<User[]> {
@@ -53,6 +69,27 @@ class PostgresUserRepository implements UserRepository {
   public async checkConflict(username: string): Promise<boolean> {
     const query = "SELECT * FROM users WHERE username=$1";
     const params = [username];
+    return (await this.db.performQuery(query, params))[0];
+  }
+
+  public async update(
+    userid: string,
+    username: string | undefined,
+    passwordHash: string | undefined
+  ): Promise<User> {
+    const user = await this.findById(userid);
+    if (!user) throw new NotFoundException();
+
+    if (username === undefined && passwordHash === undefined) return user;
+
+    const query = `UPDATE users SET username = $1, passwordHash = $2 WHERE userid = $3 RETURNING *;`;
+
+    const params = [
+      username || user.username,
+      passwordHash || user.passwordHash,
+      userid,
+    ];
+
     return (await this.db.performQuery(query, params))[0];
   }
 }

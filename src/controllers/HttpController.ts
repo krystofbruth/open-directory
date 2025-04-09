@@ -35,14 +35,21 @@ function parseQueryNumber(
   return num;
 }
 
+/** Checks if the body is present and is an object. */
+function checkRequestBody(body: unknown): void {
+  if (!body) throw createHttpError(400, "No request body.");
+  if (typeof body !== "object")
+    throw createHttpError(500, "Invalid request body.");
+}
+
+function mapExceptionToHttpError(err: unknown): HttpError {
+  if (err instanceof ConflictException) return createHttpError(409);
+  if (err instanceof NotFoundException) return createHttpError(404);
+  return createHttpError(500, "Unexpected error occured", { err });
+}
+
 export class HttpController {
   constructor(private userService: UserService) {}
-
-  private mapExceptionToHttpError(err: unknown): HttpError {
-    if (err instanceof ConflictException) return createHttpError(409);
-    if (err instanceof NotFoundException) return createHttpError(404);
-    return createHttpError(500, "Unexpected error occured", { err });
-  }
 
   private mapUserToUserView(user: User): UserView {
     return {
@@ -52,10 +59,7 @@ export class HttpController {
   }
 
   public async createUser(req: Request, res: Response) {
-    if (!req.body) throw createHttpError(400, "No request body.");
-    if (typeof req.body !== "object")
-      throw createHttpError(500, "Invalid request body.");
-
+    checkRequestBody(req.body);
     const { username, password } = req.body;
     if (typeof username !== "string")
       throw createHttpError(400, { cause: { target: "username" } });
@@ -63,14 +67,14 @@ export class HttpController {
       throw createHttpError(400, { cause: { target: "password" } });
 
     try {
-      const user = await this.userService.createUser(username, password);
+      const user = await this.userService.createUser({ username, password });
       const userView: UserView = {
         userid: user.userid,
         username: user.username,
       };
       res.status(201).json(userView);
     } catch (err) {
-      throw this.mapExceptionToHttpError(err);
+      throw mapExceptionToHttpError(err);
     }
   }
 
@@ -83,7 +87,29 @@ export class HttpController {
       const userViews = users.map((u) => this.mapUserToUserView(u));
       res.json(userViews);
     } catch (err) {
-      throw this.mapExceptionToHttpError(err);
+      throw mapExceptionToHttpError(err);
+    }
+  }
+
+  public async updateUser(req: Request, res: Response) {
+    checkRequestBody(req.body);
+    const { username, password } = req.body;
+    const userid = req.params.userid;
+
+    if (username !== undefined && typeof username !== "string")
+      throw createHttpError(400, { cause: { target: "username" } });
+    if (password !== undefined && typeof password !== "string")
+      throw createHttpError(400, { cause: { target: "password" } });
+
+    try {
+      const user = await this.userService.updateUser(userid, {
+        username,
+        password,
+      });
+      const userView = this.mapUserToUserView(user);
+      res.status(200).json(userView);
+    } catch (err) {
+      throw mapExceptionToHttpError(err);
     }
   }
 }
