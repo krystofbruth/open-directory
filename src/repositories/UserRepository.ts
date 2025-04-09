@@ -54,3 +54,10 @@ export async function PostgresUserRepositoryFactory(postgresDb: PostgresDb) {
     throw new DatabaseException(err, "User table initialization failed.");
   }
 }
+
+export async function setupPostgresUserTable(client: pg.Client) {
+  await client.query(`CREATE TABLE users (
+    userid uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    username TEXT UNIQUE NOT NULL,
+    passwordHash TEXT NOT NULL)`);
+}

@@ -1,4 +1,5 @@
 import { PostgresDb } from "../databases/postgres.js";
+import pg from "pg";
 import { Session } from "../models/Session.js";
 
 export interface SessionRepository {
@@ -24,4 +25,16 @@ class PostgresSessionRepository implements SessionRepository {
 
 export async function PostgresSessionRepositoryFactory(db: PostgresDb) {
   return new PostgresSessionRepository(db);
+}
+
+export async function setupPostgresSessionTable(client: pg.Client) {
+  await client.query(`CREATE TABLE session (
+    token TEXT PRIMARY KEY,
+    userid UUID NOT NULL,
+    created TIMESTAMP,
+    CONSTRAINT fk_user
+      FOREIGN KEY(userid)
+      REFERENCES users(userid)
+      ON DELETE CASCADE
+  )`);
 }

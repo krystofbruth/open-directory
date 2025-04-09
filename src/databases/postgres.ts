@@ -3,6 +3,8 @@ const { Client } = pg;
 import { Logger } from "../logger.js";
 import { DatabaseException } from "../base/Exceptions.js";
 
+export const databaseName = "opendirectory";
+
 export interface PostgresDb {
   client: pg.Client;
   performQuery(query: string, params: string[]): Promise<any[]>;
@@ -25,7 +27,7 @@ export async function PostgresDbFactory(): Promise<PostgresDb> {
   try {
     Logger.info(`Connecting to postgreSQL deployment ${process.env.PGHOST}`);
     const client = new Client({
-      database: "openad",
+      database: databaseName,
     });
     await client.connect();
     Logger.info(

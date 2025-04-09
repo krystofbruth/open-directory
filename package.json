@@ -5,6 +5,7 @@
   "main": "main.ts",
   "scripts": {
     "build": "tsc",
+    "setup": "npm install && npm run build && node dist/setup.js",
     "start": "node dist/main.js",
     "test": "tsc && node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "dev:tsc": "tsc --watch",
