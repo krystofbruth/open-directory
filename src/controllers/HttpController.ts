@@ -41,7 +41,7 @@ export class HttpController {
   private mapExceptionToHttpError(err: unknown): HttpError {
     if (err instanceof ConflictException) return createHttpError(409);
     if (err instanceof NotFoundException) return createHttpError(404);
-    return createHttpError(500);
+    return createHttpError(500, "Unexpected error occured", { err });
   }
 
   private mapUserToUserView(user: User): UserView {
@@ -52,7 +52,8 @@ export class HttpController {
   }
 
   public async createUser(req: Request, res: Response) {
-    if (!req.body || typeof req.body !== "object")
+    if (!req.body) throw createHttpError(400, "No request body.");
+    if (typeof req.body !== "object")
       throw createHttpError(500, "Invalid request body.");
 
     const { username, password } = req.body;

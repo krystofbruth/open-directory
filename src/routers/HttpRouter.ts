@@ -1,4 +1,10 @@
-import { Router, Response, Request, NextFunction } from "express";
+import {
+  Router,
+  Response,
+  Request,
+  NextFunction,
+  json as jsonMiddleware,
+} from "express";
 import createHttpError, { isHttpError } from "http-errors";
 import { Logger } from "pino";
 import { HttpController } from "../controllers/HttpController.js";
@@ -20,6 +26,18 @@ export function HttpRouterFactory(
     }
   );
 
+  router.post(
+    "/user",
+    jsonMiddleware(),
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        await httpController.createUser(req, res);
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
+
   router.use((req, res, next) => {
     throw createHttpError(404);
   });
@@ -30,7 +48,7 @@ export function HttpRouterFactory(
         res.status(err.status).json(err.cause);
       } else {
         logger.error(err);
-        res.status(500);
+        res.status(500).send();
       }
     }
   );

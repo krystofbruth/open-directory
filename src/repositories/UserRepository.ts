@@ -15,6 +15,14 @@ export interface UserRepository {
 class PostgresUserRepository implements UserRepository {
   constructor(private db: PostgresDb) {}
 
+  private mapPostgresUserToUser(inp: any): User {
+    return {
+      userid: inp.userid,
+      username: inp.username,
+      passwordHash: inp.passwordHash,
+    };
+  }
+
   public async create(userModifiable: UserModifiable): Promise<User> {
     const query =
       "INSERT INTO users(username, passwordhash) VALUES ($1, $2) RETURNING *;";
@@ -37,7 +45,9 @@ class PostgresUserRepository implements UserRepository {
   public async get(limit: number, offset: number): Promise<User[]> {
     const query = "SELECT * FROM users LIMIT $1 OFFSET $2";
     const params = [limit.toString(), offset.toString()];
-    return (await this.db.performQuery(query, params))[0];
+    return (await this.db.performQuery(query, params)).map((u) =>
+      this.mapPostgresUserToUser(u)
+    );
   }
 
   public async checkConflict(username: string): Promise<boolean> {
