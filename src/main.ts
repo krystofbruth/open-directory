@@ -1,4 +1,4 @@
-import { HttpController } from "./controllers/HttpController.js";
+import { ApiRouterFactory } from "./routers/ApiRouter.js";
 import { BcryptHashSuite } from "./crypto/PasswordHashSuite.js";
 import { PostgresDbFactory } from "./databases/postgres.js";
 import { Logger } from "./logger.js";
@@ -20,9 +20,8 @@ import "dotenv/config";
   // Services
   const userService = new UserService(userRepository, bcryptSuite);
 
-  // Controller & router
-  const httpController = new HttpController(userService);
-  const httpRouter = HttpRouterFactory(httpController, Logger);
+  // Routers
+  const httpRouter = ApiRouterFactory(userService, Logger);
 
   // App setup
   const app = express();
