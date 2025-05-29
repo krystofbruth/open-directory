@@ -6,7 +6,6 @@ import { UserService } from "../services/UserService.js";
 import { UserRouterFactory } from "./api/UserRouter.js";
 import { isHttpError } from "http-errors";
 import { Logger } from "pino";
-import { AuthMiddlewareFactory } from "../middlewares/AuthMiddleware.js";
 
 function mapExceptionToHttpError(err: unknown): HttpError {
   if (err instanceof ConflictException) return createHttpError(409);
@@ -19,9 +18,9 @@ export function ApiRouterFactory(
   logger: Logger
 ): Router {
   const router = Router();
-  const authMiddleware = AuthMiddlewareFactory();
+  // const authMiddleware = AuthMiddlewareFactory();
 
-  router.use("/", UserRouterFactory(userService, authMiddleware));
+  router.use("/", UserRouterFactory(userService));
 
   router.use((req: Request, res: Response, next: NextFunction) => {
     next(new NotFoundException());
@@ -36,7 +35,7 @@ export function ApiRouterFactory(
       else httpError = createHttpError(500, { err });
 
       if (httpError.expose) {
-        res.status(httpError.status).send(httpError.message);
+        res.status(httpError.status).send(httpError.cause || httpError.message);
       } else {
         logger.error(httpError);
         res.status(500).send("Internal server error occured.");

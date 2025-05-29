@@ -3,7 +3,6 @@ import { BcryptHashSuite } from "./crypto/PasswordHashSuite.js";
 import { PostgresDbFactory } from "./databases/postgres.js";
 import { Logger } from "./logger.js";
 import { PostgresUserRepositoryFactory } from "./repositories/UserRepository.js";
-import { HttpRouterFactory } from "./routers/HttpRouter.js";
 import { UserService } from "./services/UserService.js";
 import express from "express";
 import "dotenv/config";

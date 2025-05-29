@@ -33,7 +33,7 @@ export class UserService {
   }
 
   public async createUser(createUser: CreateUser): Promise<User> {
-    if (await this.userRepository.checkConflict(createUser.username)) {
+    if (await this.userRepository.findByUsername(createUser.username)) {
       throw new ConflictException();
     }
 
@@ -49,12 +49,33 @@ export class UserService {
     userid: string,
     updateUser: UpdateUser
   ): Promise<User> {
-    const username = updateUser.username || undefined;
-    const passwordHash = updateUser.password
-      ? await this.passwordHashSuite.hash(updateUser.password)
-      : undefined;
+    const originalUser = await this.userRepository.findById(userid);
+    if (!originalUser) {
+      throw new NotFoundException();
+    }
 
-    return await this.userRepository.update(userid, username, passwordHash);
+    const username = updateUser.username || undefined;
+    if (username && username !== originalUser.username) {
+      if (username !== originalUser.username) {
+        const usernameCheck = await this.userRepository.findByUsername(
+          username
+        );
+        if (usernameCheck) throw new ConflictException();
+      }
+    }
+
+    let passwordHash = undefined;
+    if (updateUser.password) {
+      passwordHash = await this.passwordHashSuite.hash(updateUser.password);
+    }
+
+    const updatedUser = await this.userRepository.update(
+      userid,
+      username,
+      passwordHash
+    );
+    if (!updatedUser) throw new NotFoundException();
+    return updatedUser;
   }
 
   public async deleteUser(userid: string): Promise<void> {

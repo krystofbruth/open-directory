@@ -23,10 +23,7 @@ function mapUserToUserView(user: User): UserView {
   };
 }
 
-export function UserRouterFactory(
-  userService: UserService,
-  authMiddleware: RequestHandler
-): Router {
+export function UserRouterFactory(userService: UserService): Router {
   const router = Router();
 
   router.get(

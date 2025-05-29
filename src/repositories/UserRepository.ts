@@ -15,12 +15,11 @@ export interface UserRepository {
   findByUsername(username: string): Promise<User | null>;
   create(userModifiable: UserModifiable): Promise<User>;
   get(limit: number, offset: number): Promise<User[]>;
-  checkConflict(username: string): Promise<boolean>;
   update(
     userid: string,
     username: string | undefined,
     passwordHash: string | undefined
-  ): Promise<User>;
+  ): Promise<User | null>;
   delete(userid: string): Promise<void>;
 }
 
@@ -43,7 +42,7 @@ class PostgresUserRepository implements UserRepository {
   }
 
   public async findById(id: string): Promise<User | null> {
-    if (!validateUUID(id)) throw new InvalidParamsException();
+    if (!validateUUID(id)) return null;
     const query = "SELECT * FROM users WHERE userid=$1;";
     const params = [id];
     const res = (await this.db.performQuery(query, params))[0];
@@ -67,19 +66,13 @@ class PostgresUserRepository implements UserRepository {
     );
   }
 
-  public async checkConflict(username: string): Promise<boolean> {
-    const query = "SELECT * FROM users WHERE username=$1";
-    const params = [username];
-    return (await this.db.performQuery(query, params))[0];
-  }
-
   public async update(
     userid: string,
     username: string | undefined,
     passwordHash: string | undefined
-  ): Promise<User> {
+  ): Promise<User | null> {
     const user = await this.findById(userid);
-    if (!user) throw new NotFoundException();
+    if (!user) return null;
 
     if (username === undefined && passwordHash === undefined) return user;
 
@@ -91,7 +84,9 @@ class PostgresUserRepository implements UserRepository {
       userid,
     ];
 
-    return (await this.db.performQuery(query, params))[0];
+    const res = (await this.db.performQuery(query, params))[0];
+    if (!res) return null;
+    return res;
   }
 
   public async delete(userid: string): Promise<void> {
