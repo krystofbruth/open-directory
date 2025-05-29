@@ -13,13 +13,13 @@ class PostgresSessionRepository implements SessionRepository {
   public async findByToken(token: string): Promise<Session | null> {
     const query = 'SELECT * FROM "session" WHERE token = $1;';
     const params = [token];
-    return (await this.db.performQuery(query, params))[0] || null;
+    return (await this.db.performQuery(query, params)).rows[0] || null;
   }
 
   public async findByUserid(userid: string): Promise<Session[]> {
     const query = 'SELECT * FROM "session" WHERE userid = $1;';
     const params = [userid];
-    return await this.db.performQuery(query, params);
+    return (await this.db.performQuery(query, params)).rows;
   }
 }
 

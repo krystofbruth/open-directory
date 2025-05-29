@@ -20,7 +20,7 @@ export interface UserRepository {
     username: string | undefined,
     passwordHash: string | undefined
   ): Promise<User | null>;
-  delete(userid: string): Promise<void>;
+  delete(userid: string): Promise<boolean>;
 }
 
 class PostgresUserRepository implements UserRepository {
@@ -38,14 +38,14 @@ class PostgresUserRepository implements UserRepository {
     const query =
       "INSERT INTO users(username, passwordhash) VALUES ($1, $2) RETURNING *;";
     const params = [userModifiable.username, userModifiable.passwordHash];
-    return (await this.db.performQuery(query, params))[0];
+    return (await this.db.performQuery(query, params)).rows[0];
   }
 
   public async findById(id: string): Promise<User | null> {
     if (!validateUUID(id)) return null;
     const query = "SELECT * FROM users WHERE userid=$1;";
     const params = [id];
-    const res = (await this.db.performQuery(query, params))[0];
+    const res = (await this.db.performQuery(query, params)).rows[0];
     if (!res) return null;
     return this.mapPostgresUserToUser(res);
   }
@@ -53,7 +53,7 @@ class PostgresUserRepository implements UserRepository {
   public async findByUsername(username: string): Promise<User | null> {
     const query = "SELECT * FROM users WHERE username=$1;";
     const params = [username];
-    const res = (await this.db.performQuery(query, params))[0];
+    const res = (await this.db.performQuery(query, params)).rows[0];
     if (!res) return null;
     return this.mapPostgresUserToUser(res);
   }
@@ -61,7 +61,7 @@ class PostgresUserRepository implements UserRepository {
   public async get(limit: number, offset: number): Promise<User[]> {
     const query = "SELECT * FROM users LIMIT $1 OFFSET $2";
     const params = [limit.toString(), offset.toString()];
-    return (await this.db.performQuery(query, params)).map((u) =>
+    return (await this.db.performQuery(query, params)).rows.map((u) =>
       this.mapPostgresUserToUser(u)
     );
   }
@@ -84,17 +84,18 @@ class PostgresUserRepository implements UserRepository {
       userid,
     ];
 
-    const res = (await this.db.performQuery(query, params))[0];
+    const res = (await this.db.performQuery(query, params)).rows[0];
     if (!res) return null;
     return res;
   }
 
-  public async delete(userid: string): Promise<void> {
-    if (!validateUUID(userid)) throw new InvalidParamsException();
+  public async delete(userid: string): Promise<boolean> {
+    if (!validateUUID(userid)) return false;
     const query = "DELETE FROM users WHERE userid = $1";
     const params = [userid];
-    await this.db.performQuery(query, params);
-    return;
+    const res = await this.db.performQuery(query, params);
+    if (res.rowCount === 0) return false;
+    return true;
   }
 }
 

@@ -79,7 +79,8 @@ export class UserService {
   }
 
   public async deleteUser(userid: string): Promise<void> {
-    await this.userRepository.delete(userid);
+    const res = await this.userRepository.delete(userid);
+    if (!res) throw new NotFoundException();
     return;
   }
 }

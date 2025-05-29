@@ -7,16 +7,16 @@ export const databaseName = "opendirectory";
 
 export interface PostgresDb {
   client: pg.Client;
-  performQuery(query: string, params: string[]): Promise<any[]>;
+  performQuery(query: string, params: string[]): Promise<pg.QueryResult<any>>;
 }
 
 function performQueryFactory(
   client: pg.Client
-): (query: string, params: string[]) => Promise<any[]> {
+): (query: string, params: string[]) => Promise<pg.QueryResult<any>> {
   return async (query, params) => {
     try {
       const res = await client.query(query, params);
-      return res.rows;
+      return res;
     } catch (err) {
       throw new DatabaseException(err);
     }
