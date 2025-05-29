@@ -5,6 +5,7 @@ import { Session } from "../models/Session.js";
 export interface SessionRepository {
   findByToken(token: string): Promise<Session | null>;
   findByUserid(userid: string): Promise<Session[]>;
+  create(userid: string, token: string): Promise<Session>;
 }
 
 class PostgresSessionRepository implements SessionRepository {
@@ -20,6 +21,14 @@ class PostgresSessionRepository implements SessionRepository {
     const query = 'SELECT * FROM "session" WHERE userid = $1;';
     const params = [userid];
     return (await this.db.performQuery(query, params)).rows;
+  }
+
+  public async create(userid: string, token: string): Promise<Session> {
+    const timestampNow = new Date().toISOString();
+    const query =
+      'INSERT INTO "session" (token, userid, created) VALUES ($1,$2,$3);';
+    const params = [token, userid, timestampNow];
+    return (await this.db.performQuery(query, params)).rows[0];
   }
 }
 
