@@ -33,3 +33,21 @@ export class InvalidParamsException extends Exception {
     super(msg);
   }
 }
+
+export class AuthenticationException extends Exception {
+  constructor(msg?: string) {
+    super(msg);
+  }
+}
+
+export class AuthorizationException extends Exception {
+  constructor(msg?: string) {
+    super(msg);
+  }
+}
+
+export class ForbiddenException extends Exception {
+  constructor(msg?: string) {
+    super(msg);
+  }
+}

@@ -17,8 +17,7 @@ export interface UserRepository {
   get(limit: number, offset: number): Promise<User[]>;
   update(
     userid: string,
-    username: string | undefined,
-    passwordHash: string | undefined
+    userModifiable: Partial<UserModifiable>
   ): Promise<User | null>;
   delete(userid: string): Promise<boolean>;
 }
@@ -31,14 +30,21 @@ class PostgresUserRepository implements UserRepository {
       userid: inp.userid,
       username: inp.username,
       passwordHash: inp.passwordhash,
+      permissions: inp.permissions.split(","),
     };
   }
 
   public async create(userModifiable: UserModifiable): Promise<User> {
     const query =
-      "INSERT INTO users(username, passwordhash) VALUES ($1, $2) RETURNING *;";
-    const params = [userModifiable.username, userModifiable.passwordHash];
-    return (await this.db.performQuery(query, params)).rows[0];
+      "INSERT INTO users(username, passwordhash, permissions) VALUES ($1, $2, $3) RETURNING *;";
+    const params = [
+      userModifiable.username,
+      userModifiable.passwordHash,
+      userModifiable.permissions.join(","),
+    ];
+    return this.mapPostgresUserToUser(
+      (await this.db.performQuery(query, params)).rows[0]
+    );
   }
 
   public async findById(id: string): Promise<User | null> {
@@ -68,25 +74,22 @@ class PostgresUserRepository implements UserRepository {
 
   public async update(
     userid: string,
-    username: string | undefined,
-    passwordHash: string | undefined
+    userModifiable: Partial<UserModifiable>
   ): Promise<User | null> {
     const user = await this.findById(userid);
     if (!user) return null;
 
-    if (username === undefined && passwordHash === undefined) return user;
-
-    const query = `UPDATE users SET username = $1, passwordHash = $2 WHERE userid = $3 RETURNING *;`;
+    const query = `UPDATE users SET username = $1, passwordHash = $2, permissions = $3 WHERE userid = $3 RETURNING *;`;
 
     const params = [
-      username || user.username,
-      passwordHash || user.passwordHash,
-      userid,
+      userModifiable.username || user.username,
+      userModifiable.passwordHash || user.passwordHash,
+      userModifiable.permissions?.join(",") || user.permissions.join(","),
     ];
 
     const res = (await this.db.performQuery(query, params)).rows[0];
     if (!res) return null;
-    return res;
+    return this.mapPostgresUserToUser(res);
   }
 
   public async delete(userid: string): Promise<boolean> {
@@ -105,11 +108,4 @@ export async function PostgresUserRepositoryFactory(postgresDb: PostgresDb) {
   } catch (err) {
     throw new DatabaseException(err, "User table initialization failed.");
   }
-}
-
-export async function setupPostgresUserTable(client: pg.Client) {
-  await client.query(`CREATE TABLE users (
-    userid uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    username TEXT UNIQUE NOT NULL,
-    passwordHash TEXT NOT NULL)`);
 }

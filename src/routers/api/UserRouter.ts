@@ -10,6 +10,8 @@ import { UserService } from "../../services/UserService.js";
 import { parseQueryNumber, checkRequestBody } from "../../utils/HttpUtils.js";
 import createHttpError from "http-errors";
 import { User } from "../../models/User.js";
+import { AuthorizationMiddlewareFactory } from "../../middlewares/AuthorizationMiddleware.js";
+import { Permissions } from "../../models/Authorization.js";
 
 interface UserView {
   userid: string;
@@ -23,11 +25,15 @@ function mapUserToUserView(user: User): UserView {
   };
 }
 
-export function UserRouterFactory(userService: UserService): Router {
+export function UserRouterFactory(
+  AuthorizationMiddlewareFactory: AuthorizationMiddlewareFactory,
+  userService: UserService
+): Router {
   const router = Router();
 
   router.get(
     "/user",
+    AuthorizationMiddlewareFactory(Permissions["users.read"]),
     async (req: Request, res: Response, next: NextFunction) => {
       const limit = parseQueryNumber(req.query.limit, 50, 100, 0);
       const offset = parseQueryNumber(req.query.offset, 0);
@@ -40,6 +46,7 @@ export function UserRouterFactory(userService: UserService): Router {
 
   router.post(
     "/user",
+    AuthorizationMiddlewareFactory(Permissions["users.create"]),
     jsonMiddleware(),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
@@ -64,6 +71,7 @@ export function UserRouterFactory(userService: UserService): Router {
 
   router.patch(
     "/user/:userid",
+    AuthorizationMiddlewareFactory(Permissions["users.update"]),
     jsonMiddleware(),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
@@ -90,6 +98,7 @@ export function UserRouterFactory(userService: UserService): Router {
 
   router.delete(
     "/user/:userid",
+    AuthorizationMiddlewareFactory(Permissions["users.delete"]),
     jsonMiddleware(),
     async (req: Request, res: Response, next: NextFunction) => {
       try {

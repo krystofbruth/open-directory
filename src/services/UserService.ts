@@ -1,11 +1,13 @@
 import { ConflictException, NotFoundException } from "../base/Exceptions.js";
 import { PasswordHashSuite } from "../crypto/PasswordHashSuite.js";
+import { Permissions } from "../models/Authorization.js";
 import { User } from "../models/User.js";
 import { UserRepository } from "../repositories/UserRepository.js";
 
 export interface CreateUser {
   username: string;
   password: string;
+  permissions?: Permissions[];
 }
 
 export interface UpdateUser {
@@ -19,8 +21,24 @@ export class UserService {
     private passwordHashSuite: PasswordHashSuite
   ) {}
 
+  public async verifyPassword(
+    userid: string,
+    password: string
+  ): Promise<boolean> {
+    const user = await this.userRepository.findById(userid);
+    if (!user) throw new NotFoundException();
+
+    return this.passwordHashSuite.compare(password, user.passwordHash);
+  }
+
   public async retrieveUserById(id: string): Promise<User> {
     const user = await this.userRepository.findById(id);
+    if (user === null) throw new NotFoundException();
+    return user;
+  }
+
+  public async retrieveUserByUsername(username: string): Promise<User> {
+    const user = await this.userRepository.findByUsername(username);
     if (user === null) throw new NotFoundException();
     return user;
   }
@@ -42,6 +60,7 @@ export class UserService {
     return await this.userRepository.create({
       username: createUser.username,
       passwordHash,
+      permissions: createUser.permissions || [],
     });
   }
 
@@ -69,11 +88,10 @@ export class UserService {
       passwordHash = await this.passwordHashSuite.hash(updateUser.password);
     }
 
-    const updatedUser = await this.userRepository.update(
-      userid,
+    const updatedUser = await this.userRepository.update(userid, {
       username,
-      passwordHash
-    );
+      passwordHash,
+    });
     if (!updatedUser) throw new NotFoundException();
     return updatedUser;
   }

@@ -11,6 +11,7 @@ import { PostgresSessionRepositoryFactory } from "./repositories/SessionReposito
 import { Sha512TokenGenerator } from "./crypto/TokenGenerator.js";
 import { AuthenticationService } from "./services/AuthenticationService.js";
 import { AuthorizationService } from "./services/AuthorizationService.js";
+import { CliController } from "./controllers/CliController.js";
 
 (async () => {
   const pgClient = await PostgresDbFactory();
@@ -38,23 +39,20 @@ import { AuthorizationService } from "./services/AuthorizationService.js";
     userService
   );
 
-  // Routers
-  const httpRouter = ApiRouterFactory(
-    userService,
-    authenticationService,
-    authorizationService,
-    sessionService,
-    Logger
-  );
+  const cliController = new CliController(userService);
 
-  // App setup
-  const app = express();
+  try {
+    switch (process.argv[2]) {
+      case "create-user":
+        await cliController.createUser();
+        break;
+      default:
+        console.log("No command specified.");
+        break;
+    }
+  } catch (err) {
+    console.error(err);
+  }
 
-  // App routes
-  app.use("/api/v1", httpRouter);
-
-  // App finalization
-  const port = parseInt(process.env.PORT || "3000");
-  app.listen(port);
-  Logger.info(`--- OpenDirectory UP on port ${port} ---`);
+  process.exit(0);
 })();

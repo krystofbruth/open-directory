@@ -1,0 +1,5 @@
+ALTER TABLE users
+ADD permissions TEXT DEFAULT '';
+
+ALTER TABLE users
+ALTER COLUMN permissions SET NOT NULL;

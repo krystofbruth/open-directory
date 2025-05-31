@@ -1,5 +1,6 @@
-import { input } from "@inquirer/prompts";
+import { input, checkbox } from "@inquirer/prompts";
 import { UserService } from "../services/UserService.js";
+import { Permissions } from "../models/Authorization.js";
 
 export class CliController {
   constructor(private userService: UserService) {}
@@ -14,10 +15,36 @@ export class CliController {
       required: true,
     });
 
-    const user = await this.userService.createUser({ username, password });
+    const permissions = (await checkbox({
+      message: "Select permissions",
+      choices: [
+        { name: "users.read", value: "users.read" },
+        { name: "users.create", value: "users.create" },
+        {
+          name: "users.update",
+          value: "users.update",
+        },
+        {
+          name: "users.delete",
+          value: "users.delete",
+        },
+        {
+          name: "global (dangerous!)",
+          value: "global",
+        },
+      ],
+    })) as Permissions[];
+
+    const user = await this.userService.createUser({
+      username,
+      password,
+      permissions,
+    });
 
     console.log(
-      `--- User creation success ---\nUID: ${user.userid}\nUsername: ${username}`
+      `--- User creation success ---\nUID: ${
+        user.userid
+      }\nUsername: ${username}\nPermissions: ${user.permissions.join(",")}`
     );
   }
 }
